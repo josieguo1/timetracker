@@ -233,10 +233,6 @@ function stopTimer() {
   const run = runningEntry();
   if (!run) return;
   run.end = Date.now();
-  // Discard accidental sub-5-second entries.
-  if (run.end - run.start < 5000) {
-    state.entries = state.entries.filter(e => e.id !== run.id);
-  }
   saveState();
 }
 
@@ -557,20 +553,16 @@ function renderEntryList() {
       const isRunning = e.end === null;
       const row = el('div', { class: 'entry' + (isRunning ? ' running' : '') }, [
         el('span', { class: 'swatch', style: { background: p ? displayColor(p.color) : 'var(--gridline)' } }),
-        el('span', { class: 'entry-name', text: p ? projectLabel(p) : 'Deleted project' }),
-        el('span', { class: 'entry-range', text: `${fmtTime(e.start)} – ${isRunning ? 'now' : fmtTime(e.end)}` }),
+        el('div', { class: 'entry-main' }, [
+          el('span', { class: 'entry-name', text: p ? projectLabel(p) : 'Deleted project' }),
+          el('span', { class: 'entry-range', text: `${fmtTime(e.start)} – ${isRunning ? 'now' : fmtTime(e.end)}` }),
+        ]),
         el('span', { class: 'entry-dur', 'data-entry': e.id, text: fmtDur(entryDuration(e)) }),
       ]);
       row.appendChild(el('button', {
         class: 'btn-icon', title: 'Edit times', 'aria-label': 'Edit start and end time', text: '✎',
         onclick: () => { editingEntryId = e.id; renderTimer(); },
       }));
-      if (!isRunning && p && !p.archived) {
-        row.appendChild(el('button', {
-          class: 'btn-icon', title: 'Start this project again', 'aria-label': `Resume ${p.name}`, text: '▶',
-          onclick: () => startTimer(e.projectId),
-        }));
-      }
       row.appendChild(el('button', {
         class: 'btn-icon danger', title: 'Delete entry', 'aria-label': 'Delete entry', text: '✕',
         onclick: async () => {
@@ -832,17 +824,72 @@ function subAddForm(parent) {
   ]);
 }
 
+/* ---------- Reordering: hold the grip and move ---------- */
+
+function attachDragHandle(row) {
+  const handle = el('span', { class: 'drag-handle', title: 'Hold and move to reorder', text: '⠿' });
+  row.prepend(handle);
+  handle.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    const container = row.parentElement;
+    handle.setPointerCapture(ev.pointerId);
+    row.classList.add('dragging');
+    const siblings = () => [...container.querySelectorAll('.project-row')]
+      .filter(r => r !== row && r.dataset.group === row.dataset.group);
+    const onMove = e => {
+      let before = null;
+      for (const s of siblings()) {
+        const rc = s.getBoundingClientRect();
+        if (e.clientY < rc.top + rc.height / 2) { before = s; break; }
+      }
+      if (before) container.insertBefore(row, before);
+      else {
+        const sibs = siblings();
+        if (sibs.length > 0) sibs[sibs.length - 1].after(row);
+      }
+    };
+    const finish = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', finish);
+      handle.removeEventListener('pointercancel', finish);
+      row.classList.remove('dragging');
+      const orderedIds = [...container.querySelectorAll('.project-row')]
+        .filter(r => r.dataset.group === row.dataset.group)
+        .map(r => r.dataset.id);
+      commitProjectOrder(orderedIds);
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', finish);
+    handle.addEventListener('pointercancel', finish);
+  });
+}
+
+// Re-place the group's members into their (possibly new) relative order while
+// leaving every other project's position in the array untouched. Chart
+// stacking and dropdown order follow this order.
+function commitProjectOrder(orderedIds) {
+  const inGroup = new Set(orderedIds);
+  const reordered = orderedIds.map(id => projectById(id)).filter(Boolean);
+  let i = 0;
+  state.projects = state.projects.map(p => (inGroup.has(p.id) ? reordered[i++] : p));
+  saveState();
+  renderProjects();
+}
+
 function projectRow(p) {
   if (editingProjectId === p.id) return projectEditRow(p);
 
   const sub = isSub(p);
   const row = el('div', {
     class: 'project-row' + (p.archived ? ' archived' : '') + (sub && !p.archived ? ' sub' : ''),
+    'data-id': p.id,
+    'data-group': p.archived ? 'archived' : (sub ? `sub-${p.parentId}` : 'top'),
   }, [
     el('span', { class: 'swatch', style: { background: displayColor(p.color) } }),
     el('span', { class: 'name', text: p.archived ? projectLabel(p) : p.name }),
     el('span', { class: 'total', text: fmtDur(sub ? projectTotal(p.id) : projectTotalRollup(p)) }),
   ]);
+  if (!p.archived) attachDragHandle(row);
   if (!p.archived && !sub) {
     row.appendChild(el('button', {
       class: 'btn-ghost', text: '+ Sub', title: `Add a subproject to ${p.name}`,

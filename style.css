@@ -335,8 +335,15 @@ input[type="text"]:focus, select:focus {
   padding: 10px 12px;
   margin-bottom: 6px;
 }
-.entry-name { font-weight: 550; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.entry-range { color: var(--text-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.entry-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.entry-name { font-weight: 550; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entry-range { color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .entry-dur { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
 .entry.running .entry-dur { color: var(--accent); }
 .entry.editing { flex-wrap: wrap; }
@@ -459,6 +466,23 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 .project-row .total { color: var(--text-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .project-row.archived .name { color: var(--text-secondary); }
 .project-row.sub { margin-left: 28px; }
+.drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 2px 4px;
+  font-size: 13px;
+  flex: none;
+}
+.project-row.dragging {
+  opacity: 0.9;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  position: relative;
+  z-index: 5;
+}
+.project-row.dragging .drag-handle { cursor: grabbing; }
 .card.sub-card { margin-left: 28px; margin-bottom: 6px; }
 
 /* ---------- Custom colour panel ---------- */
