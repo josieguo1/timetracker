@@ -1,8 +1,9 @@
 // Offline support: cache the app's files so it opens with no connection.
 // Network-first so updates arrive when online; cache fallback when offline.
-const CACHE = 'timetracker-v1';
+const CACHE = 'timetracker-v2';
 const ASSETS = ['./', 'index.html', 'app.js', 'style.css', 'manifest.json',
-  'Background.webp', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+  'Background.webp', 'Background-portrait.webp',
+  'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

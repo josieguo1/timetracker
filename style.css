@@ -42,6 +42,10 @@ body {
   font-size: 15px;
   line-height: 1.45;
 }
+/* Tall screens (phones) get the portrait crop of the same artwork. */
+@media (orientation: portrait) {
+  body { background-image: url("Background-portrait.webp"); }
+}
 /* The artwork is a light piece — keep the plain dark page in dark mode. */
 @media (prefers-color-scheme: dark) {
   body { background-image: none; }
