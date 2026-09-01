@@ -2031,4 +2031,9 @@ darkQuery.addEventListener('change', () => switchTab(activeTab));
 
 /* ============================ Init ============================ */
 
+// Offline support on the hosted app (skipped during local development).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* offline mode unavailable */ });
+}
+
 switchTab('timer');
