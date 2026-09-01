@@ -214,6 +214,7 @@ function switchTab(name) {
   if (name === 'timer') renderTimer();
   if (name === 'projects') renderProjects();
   if (name === 'reports') renderReports();
+  if (name === 'settings') renderSettings();
 }
 
 document.querySelectorAll('.tab').forEach(btn => {
@@ -1432,6 +1433,53 @@ function hideTooltip() {
 }
 
 /* ============================ Settings tab ============================ */
+
+/* ---------- Project Order ---------- */
+
+// Swap a project with its neighbouring sibling (dir −1 = up, +1 = down).
+// Order within state.projects drives lists, dropdowns, and chart stacking.
+function moveProject(p, dir) {
+  const sibs = state.projects.filter(x => !x.archived
+    && (isSub(p) ? x.parentId === p.parentId : isTopLevel(x) && !x.archived));
+  const idx = sibs.indexOf(p);
+  const other = sibs[idx + dir];
+  if (!other) return;
+  const i = state.projects.indexOf(p);
+  const j = state.projects.indexOf(other);
+  state.projects[i] = other;
+  state.projects[j] = p;
+  saveState();
+  renderSettings();
+}
+
+function renderSettings() {
+  const wrap = $('#order-list');
+  wrap.textContent = '';
+  const active = state.projects.filter(x => !x.archived);
+  const tops = active.filter(isTopLevel);
+  if (tops.length === 0) {
+    wrap.appendChild(el('div', { class: 'empty', text: 'No active projects.' }));
+    return;
+  }
+  const rowFor = (p, sibs) => {
+    const idx = sibs.indexOf(p);
+    const up = el('button', { class: 'btn-icon', text: '▲', 'aria-label': `Move ${p.name} up`, onclick: () => moveProject(p, -1) });
+    const down = el('button', { class: 'btn-icon', text: '▼', 'aria-label': `Move ${p.name} down`, onclick: () => moveProject(p, 1) });
+    up.disabled = idx === 0;
+    down.disabled = idx === sibs.length - 1;
+    return el('div', { class: 'order-row' + (isSub(p) ? ' sub' : '') }, [
+      el('span', { class: 'swatch', style: { background: displayColor(p.color) } }),
+      el('span', { class: 'name', text: p.name }),
+      up,
+      down,
+    ]);
+  };
+  for (const p of tops) {
+    wrap.appendChild(rowFor(p, tops));
+    const subs = active.filter(x => x.parentId === p.id);
+    for (const c of subs) wrap.appendChild(rowFor(c, subs));
+  }
+}
 
 /* ---------- Backup & Export ---------- */
 

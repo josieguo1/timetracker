@@ -668,6 +668,25 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
   margin: 0 0 14px;
 }
 .bg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.order-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+}
+.order-row + .order-row { border-top: 1px solid var(--gridline); }
+.order-row .name {
+  flex: 1;
+  font-weight: 550;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.order-row.sub { padding-left: 26px; }
+.order-row .btn-icon { font-size: 12px; }
+.order-row .btn-icon:disabled { opacity: 0.3; cursor: default; }
 .bg-choose { display: inline-block; cursor: pointer; }
 .settings-error {
   color: var(--danger);
