@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TIME TRACKER</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#456b1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>TIME TRACKER</h1>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="timer" aria-selected="true">Timer</button>
+      <button class="tab" role="tab" data-tab="projects" aria-selected="false">Projects</button>
+      <button class="tab" role="tab" data-tab="reports" aria-selected="false">Reports</button>
+      <button class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ Timer tab ============ -->
+    <section class="panel" id="panel-timer" role="tabpanel">
+      <div class="card timer-card">
+        <div class="timer-controls">
+          <div class="project-select-wrap">
+            <span class="swatch" id="timer-swatch" aria-hidden="true"></span>
+            <select id="timer-project" aria-label="Project to track"></select>
+          </div>
+          <div class="timer-clock" id="timer-clock">0:00:00</div>
+          <button class="btn-primary" id="timer-toggle">Start</button>
+        </div>
+        <p class="timer-hint" id="timer-hint"></p>
+      </div>
+      <div id="entry-days"></div>
+    </section>
+
+    <!-- ============ Projects tab ============ -->
+    <section class="panel" id="panel-projects" role="tabpanel" hidden>
+      <div class="card">
+        <form id="project-form" autocomplete="off">
+          <div class="form-row">
+            <input type="text" id="project-name" placeholder="New Project Name" maxlength="60" aria-label="Project name">
+            <button type="submit" class="btn-primary" id="project-submit">Add Project</button>
+          </div>
+          <div class="swatch-row" id="swatch-row" role="radiogroup" aria-label="Project colour"></div>
+        </form>
+      </div>
+      <h2 class="section-title">Active</h2>
+      <div id="project-list-active" class="project-list"></div>
+      <h2 class="section-title" id="archived-title" hidden>Archived</h2>
+      <div id="project-list-archived" class="project-list"></div>
+    </section>
+
+    <!-- ============ Reports tab ============ -->
+    <section class="panel" id="panel-reports" role="tabpanel" hidden>
+      <div class="report-filters">
+        <div class="seg" id="range-seg" role="radiogroup" aria-label="Time range">
+          <button data-range="week">Week</button>
+          <button data-range="month">Month</button>
+          <button data-range="year">Year</button>
+        </div>
+        <div class="seg" id="bucket-seg" role="radiogroup" aria-label="Bar size"></div>
+        <div class="seg" id="group-seg" role="radiogroup" aria-label="Grouping">
+          <button data-group="project">By Project</button>
+          <button data-group="sub">By Subproject</button>
+        </div>
+        <div class="range-nav">
+          <button id="range-prev" aria-label="Previous period">&#8249;</button>
+          <span id="range-label"></span>
+          <button id="range-next" aria-label="Next period">&#8250;</button>
+        </div>
+        <button class="btn-ghost" id="set-default">Set as default view</button>
+      </div>
+      <div class="card">
+        <h2 class="card-title" id="chart-heading"></h2>
+        <div class="report-head">
+          <div class="stat">
+            <div class="stat-label">Total Tracked</div>
+            <div class="stat-value" id="report-total">0h</div>
+          </div>
+        </div>
+        <div id="chart-wrap" class="chart-wrap"></div>
+        <div id="chart-legend" class="legend"></div>
+      </div>
+      <div class="card" id="report-breakdown-card">
+        <h2 class="card-title" id="breakdown-heading">By Project</h2>
+        <div id="report-breakdown"></div>
+      </div>
+    </section>
+
+    <!-- ============ Settings tab ============ -->
+    <section class="panel" id="panel-settings" role="tabpanel" hidden>
+      <div class="card">
+        <h2 class="card-title">Report Export</h2>
+        <p class="settings-hint">Exports the view currently selected in the Reports tab — its period, bar size, and grouping — as an Excel worksheet with the tracked time per bar, totals, and a matching stacked chart.</p>
+        <div class="bg-actions">
+          <button class="btn-ghost" id="export-report">Export Report to Excel</button>
+          <button class="btn-ghost" id="export-report-pdf">Export Report to PDF</button>
+        </div>
+        <p class="settings-error" id="report-error" role="alert"></p>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Backup &amp; Export</h2>
+        <p class="settings-hint">Your data lives in this browser. Download a backup file and keep it in your iCloud Drive or Google Drive folder to have a copy in the cloud (this app's own folder is already in iCloud Drive). Restore replaces the app's data with a backup file. Export to Excel downloads every entry as an .xlsx worksheet.</p>
+        <div class="bg-actions">
+          <button class="btn-ghost" id="backup-download">Download Backup</button>
+          <label class="btn-ghost bg-choose">Restore Backup<input type="file" accept=".json,application/json" id="backup-restore" hidden></label>
+          <button class="btn-ghost" id="export-excel">Export to Excel</button>
+        </div>
+        <p class="settings-error" id="backup-error" role="alert"></p>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="tooltip" class="tooltip" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
