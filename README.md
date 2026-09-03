@@ -18,11 +18,10 @@ tracked data is tied to how you open it, so pick one and stick with it.)
 ## Tabs
 
 - **Timer** — pick a project, Start/Stop. Entries are listed day by day with
-  daily totals; each entry can have its start/end times edited (✎), be
-  resumed (▶), or deleted (✕). Times stay within the entry's day — an entry
-  whose end is not after its start is rejected with an "Invalid entry"
-  message. A running timer survives page reloads and shows in the browser
-  tab title.
+  daily totals; each entry can have its date and times edited (✎) or be
+  deleted (✕). Times stay within the entry's day — an entry whose end is not
+  after its start is rejected with an "Invalid entry" message. A running
+  timer survives page reloads and shows in the browser tab title.
 - **Projects** — add projects with a colour (24 preset colours — the first
   eight chosen to stay distinguishable in charts — or any custom colour from
   the toggleable colour grid). Presets are editable: hover one and click ×

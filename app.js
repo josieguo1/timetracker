@@ -244,8 +244,8 @@ function renderTimer() {
 
   const prevChoice = select.value;
   select.textContent = '';
+  // Time is tracked on subprojects only — projects without them aren't listed.
   for (const p of active.filter(isTopLevel)) {
-    select.appendChild(el('option', { value: p.id, text: p.name }));
     for (const c of active.filter(x => x.parentId === p.id)) {
       select.appendChild(el('option', { value: c.id, text: `${p.name} › ${c.name}` }));
     }
@@ -265,13 +265,18 @@ function renderTimer() {
   const toggle = $('#timer-toggle');
   toggle.textContent = run ? 'Stop' : 'Start';
   toggle.classList.toggle('stop', !!run);
-  toggle.disabled = !run && active.length === 0;
+  toggle.disabled = !run && select.options.length === 0;
 
   const hint = $('#timer-hint');
   hint.textContent = '';
-  if (!run && active.length === 0) {
-    hint.append('No projects yet — ');
-    hint.appendChild(el('a', { href: '#', text: 'create one in the Projects tab', onclick: ev => { ev.preventDefault(); switchTab('projects'); } }));
+  if (!run && select.options.length === 0) {
+    const noProjects = active.length === 0;
+    hint.append(noProjects ? 'No projects yet — ' : 'No subprojects yet — ');
+    hint.appendChild(el('a', {
+      href: '#',
+      text: noProjects ? 'create one in the Projects tab' : 'add one with + Sub in the Projects tab',
+      onclick: ev => { ev.preventDefault(); switchTab('projects'); },
+    }));
     hint.append('.');
   } else if (run) {
     const p = projectById(run.projectId);
@@ -331,20 +336,30 @@ function createTimePicker(ms, label) {
   const colInits = []; // scroll each column to its value when the pop opens
 
   const mkCol = (values, startIdx, onSel, fmt) => {
+    const len = values.length;
+    // Hours and minutes wrap around endlessly: render several copies of the
+    // list and silently recentre when the scroll nears either end. The
+    // two-item AM/PM column stays finite.
+    const REPS = len > 2 ? (len < 24 ? 33 : 9) : 1;
+    const midBase = Math.floor(REPS / 2) * len;
     const colEl = el('div', { class: 'tp-col', role: 'listbox', 'aria-label': label });
-    const items = values.map((v, i) => {
-      const item = el('button', {
-        type: 'button', class: 'tp-item', role: 'option', 'aria-selected': 'false',
-        text: fmt(v),
-        onclick: () => colEl.scrollTo({ top: i * TP_ITEM_H, behavior: 'smooth' }),
+    const items = [];
+    for (let r = 0; r < REPS; r++) {
+      values.forEach((v, vi) => {
+        const i = r * len + vi;
+        const item = el('button', {
+          type: 'button', class: 'tp-item', role: 'option', 'aria-selected': 'false',
+          text: fmt(v),
+          onclick: () => colEl.scrollTo({ top: i * TP_ITEM_H, behavior: 'smooth' }),
+        });
+        colEl.appendChild(item);
+        items.push(item);
       });
-      colEl.appendChild(item);
-      return item;
-    });
+    }
 
     let idx = -1;
     const setIdx = (i, silent) => {
-      i = Math.max(0, Math.min(values.length - 1, i));
+      i = Math.max(0, Math.min(items.length - 1, i));
       if (i === idx) return;
       if (items[idx]) {
         items[idx].classList.remove('selected');
@@ -354,20 +369,27 @@ function createTimePicker(ms, label) {
       items[idx].classList.add('selected');
       items[idx].setAttribute('aria-selected', 'true');
       if (!silent) {
-        onSel(values[idx]);
+        onSel(values[idx % len]);
         field.textContent = fmtHM(h, m);
       }
     };
-    setIdx(startIdx, true);
+    setIdx(midBase + startIdx, true);
 
-    // The value resting at the column's centre is the selection.
-    let raf = null;
+    // The value resting at the column's centre is the selection. (No rAF
+    // here — browsers pause animation frames in background tabs.)
     colEl.addEventListener('scroll', () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = null;
-        setIdx(Math.round(colEl.scrollTop / TP_ITEM_H), false);
-      });
+      const i = Math.round(colEl.scrollTop / TP_ITEM_H);
+      setIdx(i, false);
+      if (REPS > 1 && (i < len * 2 || i >= (REPS - 2) * len)) {
+        const centred = midBase + (((i % len) + len) % len);
+        if (items[idx]) { // clear the pre-jump highlight before reselecting
+          items[idx].classList.remove('selected');
+          items[idx].setAttribute('aria-selected', 'false');
+        }
+        idx = -1;
+        colEl.scrollTop = centred * TP_ITEM_H;
+        setIdx(centred, true);
+      }
     });
 
     colInits.push(() => { colEl.scrollTop = idx * TP_ITEM_H; });
@@ -1212,6 +1234,7 @@ function drawChart(buckets, series, orphanTime) {
       if (v > 0) segs.push({ color: displayColor(s.color), v });
     }
     if (orphanTime && b.orphan > 0) segs.push({ color: 'var(--baseline)', v: b.orphan });
+    segs.sort((a, b2) => b2.v - a.v); // most time at the bottom of the bar
 
     let cursor = baseY;
     const x = cx - barW / 2;
@@ -1256,7 +1279,7 @@ function drawLegend(series) {
   const legend = $('#chart-legend');
   legend.textContent = '';
   if (series.length < 2) return; // single series: the breakdown names it
-  for (const s of series) {
+  for (const s of [...series].sort((a, b) => a.name.localeCompare(b.name))) {
     legend.appendChild(el('span', { class: 'legend-item' }, [
       el('span', { class: 'swatch', style: { background: displayColor(s.color) } }),
       el('span', { text: s.name }),
