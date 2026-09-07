@@ -36,19 +36,28 @@
 
 body {
   margin: 0;
-  background: var(--page) url("Background.webp") center / cover no-repeat fixed;
+  background: var(--page);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 15px;
   line-height: 1.45;
 }
+/* Fixed backdrop the content scrolls over. A fixed element is used because
+   iOS ignores background-attachment: fixed. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url("Background.webp") center / cover no-repeat;
+}
 /* Tall screens (phones) get the portrait crop of the same artwork. */
 @media (orientation: portrait) {
-  body { background-image: url("Background-portrait.webp"); }
+  body::before { background-image: url("Background-portrait.webp"); }
 }
 /* The artwork is a light piece — keep the plain dark page in dark mode. */
 @media (prefers-color-scheme: dark) {
-  body { background-image: none; }
+  body::before { content: none; }
 }
 .app {
   max-width: 760px;
@@ -566,8 +575,11 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 .chart-wrap .gridline { stroke: var(--gridline); stroke-width: 1; }
 .chart-wrap .baseline { stroke: var(--baseline); stroke-width: 1; }
 .chart-wrap .hover-wash { fill: var(--ghost-hover); opacity: 0; }
-.chart-wrap .col-hit:hover .hover-wash,
-.chart-wrap .col-hit:focus .hover-wash { opacity: 1; }
+@media (hover: hover) {
+  .chart-wrap .col-hit:hover .hover-wash { opacity: 1; }
+}
+.chart-wrap, .pie-wrap { -webkit-tap-highlight-color: transparent; }
+.chart-wrap .col-hit, .pie-slice { -webkit-tap-highlight-color: transparent; }
 .chart-wrap .col-hit { outline: none; }
 
 .legend {

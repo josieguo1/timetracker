@@ -257,8 +257,13 @@ function renderTimer() {
       select.appendChild(el('option', { value: run.projectId, text: p ? p.name : 'Deleted project' }));
     }
     select.value = run.projectId;
-  } else if (active.some(p => p.id === prevChoice)) {
+  } else if ([...select.options].some(o => o.value === prevChoice)) {
     select.value = prevChoice;
+  } else {
+    // Default to the most recently recorded project.
+    const last = [...state.entries].sort((a, b) => (b.end ?? b.start) - (a.end ?? a.start))
+      .find(e => [...select.options].some(o => o.value === e.projectId));
+    if (last) select.value = last.projectId;
   }
   select.disabled = !!run;
 
