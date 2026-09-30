@@ -2014,6 +2014,7 @@ async function exportReportPdf() {
     + '--ghost-hover:rgba(11,11,11,0.05) !important;}';
   document.head.appendChild(lightStyle);
   exportLightMode = true;
+  document.body.classList.add('pdf-export');
   // The report cards need layout to be captured; if the Reports panel is
   // hidden (we're on Settings), lay it out off-screen for the snapshot.
   const panel = $('#panel-reports');
@@ -2037,6 +2038,7 @@ async function exportReportPdf() {
     errEl.textContent = 'Could not build the PDF — try again from the Reports tab.';
   } finally {
     lightStyle.remove();
+    document.body.classList.remove('pdf-export');
     exportLightMode = false;
     if (wasHidden) {
       panel.hidden = true;

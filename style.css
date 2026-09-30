@@ -584,9 +584,15 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 
 .legend {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+/* The PDF export keeps the compact wrapped legend. */
+.pdf-export .legend {
+  flex-direction: row;
   flex-wrap: wrap;
   gap: 6px 16px;
-  margin-top: 12px;
 }
 .legend-item {
   display: flex;
